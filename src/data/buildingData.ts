@@ -1,6 +1,6 @@
 
 import { 
-  MapPin, StairsIcon, Workflow, Coffee, 
+  MapPin, ArrowUp, Navigation, Coffee, 
   Users, Phone, Presentation, Printer, 
   Box, Mail, FileText, Calculator 
 } from "lucide-react";
@@ -42,8 +42,8 @@ export interface Floor {
 export const iconByType = {
   office: Users,
   meeting: Presentation,
-  stairs: StairsIcon,
-  elevator: Workflow,
+  stairs: ArrowUp,
+  elevator: Navigation,
   restroom: MapPin,
   kitchen: Coffee,
   reception: Phone,

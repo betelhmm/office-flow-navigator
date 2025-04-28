@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import { 
   Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, 
   MeshStandardMaterial, Mesh, Group, AmbientLight, 
   DirectionalLight, Vector3, LineBasicMaterial, BufferGeometry, 
-  Line, LineSegments, EdgesGeometry, 
-  LineBasicMaterial as EdgeMaterial, GridHelper, Color
+  Line, LineSegments, EdgesGeometry, Color,
+  GridHelper, Shape, ExtrudeGeometry
 } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Room, floors } from '../data/buildingData';
 
 interface ThreeDMapProps {
@@ -113,24 +114,41 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
 
     const floorHeight = 50;
     const floorSpacing = 10;
+    const cutHeight = 30; // Height where we cut the rooms (150cm scaled)
 
-    floors.forEach(floor => {
+    floors.forEach((floor) => {
       const floorGroup = new Group();
-
+      
+      // Create floor base
       const baseGeometry = new BoxGeometry(500, 2, 500);
       const baseMaterial = new MeshStandardMaterial({ 
         color: floor.level === selectedFloor ? 0xe5deff : 0xeeeeee,
         transparent: true,
         opacity: floor.level === selectedFloor ? 0.9 : 0.3
       });
-      
       const baseMesh = new Mesh(baseGeometry, baseMaterial);
       floorGroup.add(baseMesh);
-      
-      floor.rooms.forEach(room => {
+
+      // Add rooms with cutaway walls
+      floor.rooms.forEach((room) => {
         const roomSize = 20;
-        const roomGeometry = new BoxGeometry(roomSize, 30, roomSize);
-        
+        const wallThickness = 1;
+
+        // Create room walls (cutaway style)
+        const shape = new Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(roomSize, 0);
+        shape.lineTo(roomSize, roomSize);
+        shape.lineTo(0, roomSize);
+        shape.lineTo(0, 0);
+
+        const extrudeSettings = {
+          steps: 1,
+          depth: cutHeight,
+          bevelEnabled: false,
+        };
+
+        // Select color based on room type
         let roomColor = 0x9b87f5;
         
         switch (room.type) {
@@ -158,74 +176,74 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
           default:
             roomColor = 0x9b87f5;
         }
-        
+
         if (selectedRoom && room.id === selectedRoom.id) {
           roomColor = 0xF1F0FB;
         }
-        
+
         if (pathRooms && pathRooms.some(pathRoom => pathRoom.id === room.id)) {
           roomColor = 0xF97316;
         }
-        
-        const roomMaterial = new MeshStandardMaterial({ 
+
+        const wallGeometry = new ExtrudeGeometry(shape, extrudeSettings);
+        const wallMaterial = new MeshStandardMaterial({
           color: roomColor,
           transparent: true,
-          opacity: floor.level === selectedFloor ? 0.9 : 0.3
+          opacity: floor.level === selectedFloor ? 0.9 : 0.3,
         });
-        
-        const roomMesh = new Mesh(roomGeometry, roomMaterial);
-        roomMesh.position.set(
-          room.position.x - 250 + roomSize/2, 
-          15, 
-          room.position.y - 250 + roomSize/2
+
+        const wallMesh = new Mesh(wallGeometry, wallMaterial);
+        wallMesh.position.set(
+          room.position.x - 250,
+          0,
+          room.position.y - 250
         );
         
-        floorGroup.add(roomMesh);
-        
+        floorGroup.add(wallMesh);
+
+        // Add edges for better visibility
         const edges = new LineSegments(
-          new EdgesGeometry(roomGeometry),
-          new EdgeMaterial({ 
+          new EdgesGeometry(wallGeometry),
+          new LineBasicMaterial({
             color: 0x000000,
             transparent: true,
-            opacity: floor.level === selectedFloor ? 0.7 : 0.1
+            opacity: floor.level === selectedFloor ? 0.7 : 0.1,
           })
         );
-        
-        edges.position.copy(roomMesh.position);
+        edges.position.copy(wallMesh.position);
         floorGroup.add(edges);
       });
-      
+
+      // Position the floor
       const yPosition = (floor.level - 1) * (floorHeight + floorSpacing);
       floorGroup.position.y = yPosition;
-      
       buildingRef.current.add(floorGroup);
     });
-    
+
+    // Add navigation path
     if (pathRooms && pathRooms.length > 1) {
       const points: Vector3[] = [];
       
-      pathRooms.forEach(room => {
+      pathRooms.forEach((room) => {
         const floorIndex = room.floor - 1;
-        const floorY = floorIndex * (floorHeight + floorSpacing) + 30;
-        
+        const floorY = floorIndex * (floorHeight + floorSpacing) + cutHeight/2;
         points.push(new Vector3(
-          room.position.x - 250 + 10, 
-          floorY, 
+          room.position.x - 250 + 10,
+          floorY,
           room.position.y - 250 + 10
         ));
       });
-      
-      const pathMaterial = new LineBasicMaterial({ 
+
+      const pathMaterial = new LineBasicMaterial({
         color: 0xF97316,
         linewidth: 3
       });
-      
       const pathGeometry = new BufferGeometry().setFromPoints(points);
       const pathLine = new Line(pathGeometry, pathMaterial);
-      
       buildingRef.current.add(pathLine);
     }
-    
+
+    // Update camera position
     if (cameraRef.current && controlsRef.current) {
       const targetY = (selectedFloor - 1) * (floorHeight + floorSpacing);
       controlsRef.current.target.set(0, targetY, 0);

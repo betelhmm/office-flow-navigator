@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Floor } from '../data/buildingData';
-import { Stairs, Elevator } from 'lucide-react';
+import { StairsIcon, Workflow } from 'lucide-react';
 
 interface FloorControlsProps {
   floors: Floor[];
@@ -40,10 +40,10 @@ const FloorControls: React.FC<FloorControlsProps> = ({
       
       <div className="border-t w-full pt-2 flex justify-center gap-2">
         <Button variant="outline" size="icon" title="Stairs">
-          <Stairs size={18} />
+          <StairsIcon size={18} />
         </Button>
         <Button variant="outline" size="icon" title="Elevator">
-          <Elevator size={18} />
+          <Workflow size={18} />
         </Button>
       </div>
     </div>

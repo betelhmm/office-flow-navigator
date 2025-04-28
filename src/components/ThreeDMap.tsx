@@ -1,10 +1,9 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, 
   MeshStandardMaterial, Mesh, Group, AmbientLight, 
   DirectionalLight, Vector3, LineBasicMaterial, BufferGeometry, 
-  Line, TextGeometry, Font, LineSegments, EdgesGeometry, 
+  Line, LineSegments, EdgesGeometry, 
   LineBasicMaterial as EdgeMaterial, GridHelper, Color
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -28,16 +27,13 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
   const controlsRef = useRef<OrbitControls | null>(null);
   const buildingRef = useRef<Group | null>(null);
 
-  // Initialize the scene
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Create scene
     const scene = new Scene();
     scene.background = new Color(0xf8f9fa);
     sceneRef.current = scene;
 
-    // Create camera
     const camera = new PerspectiveCamera(
       50, 
       containerRef.current.clientWidth / containerRef.current.clientHeight, 
@@ -47,7 +43,6 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
     camera.position.set(50, 150, 300);
     cameraRef.current = camera;
 
-    // Create renderer
     const renderer = new WebGLRenderer({ antialias: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -55,7 +50,6 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
     rendererRef.current = renderer;
     renderer.domElement.classList.add('three-canvas');
 
-    // Create lighting
     const ambientLight = new AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
@@ -63,17 +57,14 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
     directionalLight.position.set(100, 100, 100);
     scene.add(directionalLight);
 
-    // Add building
     const building = new Group();
     buildingRef.current = building;
     scene.add(building);
 
-    // Add floor grid
     const grid = new GridHelper(500, 20, 0x888888, 0xcccccc);
     grid.position.y = -0.5;
     scene.add(grid);
 
-    // Add controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
@@ -83,7 +74,6 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
     controls.maxPolarAngle = Math.PI / 2;
     controlsRef.current = controls;
 
-    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -91,7 +81,6 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
     };
     animate();
 
-    // Handle resize
     const handleResize = () => {
       if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
       
@@ -115,24 +104,19 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
     };
   }, []);
 
-  // Update building when floor changes
   useEffect(() => {
     if (!buildingRef.current || !sceneRef.current) return;
 
-    // Clear previous building
     while (buildingRef.current.children.length > 0) {
       buildingRef.current.remove(buildingRef.current.children[0]);
     }
 
-    // Floor offset
     const floorHeight = 50;
-    const floorSpacing = 10; // Gap between floors
-    
-    // Create each floor
+    const floorSpacing = 10;
+
     floors.forEach(floor => {
       const floorGroup = new Group();
-      
-      // Floor base
+
       const baseGeometry = new BoxGeometry(500, 2, 500);
       const baseMaterial = new MeshStandardMaterial({ 
         color: floor.level === selectedFloor ? 0xe5deff : 0xeeeeee,
@@ -143,13 +127,11 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
       const baseMesh = new Mesh(baseGeometry, baseMaterial);
       floorGroup.add(baseMesh);
       
-      // Add rooms
       floor.rooms.forEach(room => {
         const roomSize = 20;
         const roomGeometry = new BoxGeometry(roomSize, 30, roomSize);
         
-        // Select color based on room type
-        let roomColor = 0x9b87f5; // Default purple
+        let roomColor = 0x9b87f5;
         
         switch (room.type) {
           case 'office':
@@ -177,12 +159,10 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
             roomColor = 0x9b87f5;
         }
         
-        // Highlight selected room
         if (selectedRoom && room.id === selectedRoom.id) {
           roomColor = 0xF1F0FB;
         }
         
-        // Highlight path rooms
         if (pathRooms && pathRooms.some(pathRoom => pathRoom.id === room.id)) {
           roomColor = 0xF97316;
         }
@@ -202,7 +182,6 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
         
         floorGroup.add(roomMesh);
         
-        // Add edges to make rooms more visible
         const edges = new LineSegments(
           new EdgesGeometry(roomGeometry),
           new EdgeMaterial({ 
@@ -216,20 +195,18 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
         floorGroup.add(edges);
       });
       
-      // Position the floor based on level
       const yPosition = (floor.level - 1) * (floorHeight + floorSpacing);
       floorGroup.position.y = yPosition;
       
       buildingRef.current.add(floorGroup);
     });
     
-    // Draw path if we have path rooms
     if (pathRooms && pathRooms.length > 1) {
       const points: Vector3[] = [];
       
       pathRooms.forEach(room => {
         const floorIndex = room.floor - 1;
-        const floorY = floorIndex * (floorHeight + floorSpacing) + 30; // Position above floor
+        const floorY = floorIndex * (floorHeight + floorSpacing) + 30;
         
         points.push(new Vector3(
           room.position.x - 250 + 10, 
@@ -249,13 +226,11 @@ const ThreeDMap: React.FC<ThreeDMapProps> = ({
       buildingRef.current.add(pathLine);
     }
     
-    // Focus camera on selected floor
     if (cameraRef.current && controlsRef.current) {
       const targetY = (selectedFloor - 1) * (floorHeight + floorSpacing);
       controlsRef.current.target.set(0, targetY, 0);
       controlsRef.current.update();
     }
-
   }, [selectedFloor, selectedRoom, pathRooms]);
 
   return <div ref={containerRef} className="w-full h-full" />;

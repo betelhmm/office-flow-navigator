@@ -13,7 +13,10 @@ import { useToast } from '@/components/ui/use-toast';
 const NavigationInterface: React.FC = () => {
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<Room>(floors[0].rooms[0]); // Default to reception
+  // Initialize to reception on ground floor
+  const [currentLocation, setCurrentLocation] = useState<Room>(() => {
+    return floors[0].rooms.find(room => room.id === "reception-1") || floors[0].rooms[0];
+  });
   const [pathRooms, setPathRooms] = useState<Room[]>([]);
   const [showDirectoryPanel, setShowDirectoryPanel] = useState(true);
   const { toast } = useToast();
@@ -39,6 +42,15 @@ const NavigationInterface: React.FC = () => {
 
   // Handle route request
   const handleRouteRequest = (startRoom: Room, endRoom: Room) => {
+    // Don't calculate route if start and end are the same
+    if (startRoom.id === endRoom.id) {
+      toast({
+        title: "Same location",
+        description: "Start and end locations are the same.",
+      });
+      return;
+    }
+    
     // Build graph from all rooms
     const allRooms = floors.flatMap(floor => floor.rooms);
     const graph = buildGraph(allRooms);
@@ -70,7 +82,7 @@ const NavigationInterface: React.FC = () => {
     
     toast({
       title: "Route Calculated",
-      description: `Route from ${startRoom.name} to ${endRoom.name}`
+      description: `Route from ${startRoom.name} to ${endRoom.name}`,
     });
   };
 

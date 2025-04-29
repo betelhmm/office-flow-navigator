@@ -6,7 +6,7 @@ interface Graph {
   [key: string]: { [key: string]: number };
 }
 
-// Updated buildGraph function to handle the new floor plan design
+// Updated buildGraph function to prioritize corridors for pathfinding
 export const buildGraph = (rooms: Room[]): Graph => {
   const graph: Graph = {};
   
@@ -14,35 +14,85 @@ export const buildGraph = (rooms: Room[]): Graph => {
   rooms.forEach(room => {
     graph[room.id] = {};
   });
+
+  // Get all corridors for easy access
+  const corridors = rooms.filter(room => room.type === 'corridor');
+  const stairsAndElevators = rooms.filter(room => room.type === 'stairs' || room.type === 'elevator');
   
-  // For each room, connect to nearby rooms on the same floor
+  // Connect rooms to nearest corridors on the same floor
   rooms.forEach(room => {
-    rooms.forEach(otherRoom => {
-      if (room.id !== otherRoom.id) {
-        // Connect rooms on same floor based on proximity
-        if (room.floor === otherRoom.floor) {
-          // Calculate distance between room centers
-          const distance = Math.sqrt(
-            Math.pow(room.position.x - otherRoom.position.x, 2) +
-            Math.pow(room.position.y - otherRoom.position.y, 2)
-          );
-          
-          // Connect if they're reasonably close
-          if (distance < 200) {
-            graph[room.id][otherRoom.id] = distance;
-          }
-        }
+    // Skip corridors, they will be connected differently
+    if (room.type === 'corridor') return;
+    
+    // Find nearest corridor on the same floor
+    const sameFloorCorridors = corridors.filter(c => c.floor === room.floor);
+    sameFloorCorridors.forEach(corridor => {
+      // Calculate distance between room and corridor
+      const distance = Math.sqrt(
+        Math.pow(room.position.x - corridor.position.x, 2) +
+        Math.pow(room.position.y - corridor.position.y, 2)
+      );
+      
+      // Connect if they're reasonably close, but check if they overlap
+      const roomLeft = room.position.x - room.width / 2;
+      const roomRight = room.position.x + room.width / 2;
+      const roomTop = room.position.y - room.height / 2;
+      const roomBottom = room.position.y + room.height / 2;
+      
+      const corridorLeft = corridor.position.x - corridor.width / 2;
+      const corridorRight = corridor.position.x + corridor.width / 2;
+      const corridorTop = corridor.position.y - corridor.height / 2;
+      const corridorBottom = corridor.position.y + corridor.height / 2;
+      
+      // Check if room and corridor overlap or are adjacent
+      const overlapsHorizontally = 
+        (roomLeft <= corridorRight && roomRight >= corridorLeft);
+      const overlapsVertically = 
+        (roomTop <= corridorBottom && roomBottom >= corridorTop);
+      
+      // Connect if they overlap in at least one dimension and are close enough
+      if ((overlapsHorizontally || overlapsVertically) && distance < 150) {
+        // Make the connection bidirectional with lower cost for corridors
+        graph[room.id][corridor.id] = distance;
+        graph[corridor.id][room.id] = distance; 
+      }
+    });
+  });
+  
+  // Connect corridors to each other
+  corridors.forEach(corridor => {
+    corridors.forEach(otherCorridor => {
+      if (corridor.id !== otherCorridor.id && corridor.floor === otherCorridor.floor) {
+        // Check if corridors are connected (they intersect or are adjacent)
+        const distance = Math.sqrt(
+          Math.pow(corridor.position.x - otherCorridor.position.x, 2) +
+          Math.pow(corridor.position.y - otherCorridor.position.y, 2)
+        );
         
-        // Connect stairs and elevators between floors
+        // Connect if distance is reasonable
+        if (distance < 150) {
+          // Corridors should have lower transit cost
+          graph[corridor.id][otherCorridor.id] = distance * 0.5;
+          graph[otherCorridor.id][corridor.id] = distance * 0.5;
+        }
+      }
+    });
+  });
+  
+  // Connect stairs and elevators between floors
+  stairsAndElevators.forEach(transit => {
+    stairsAndElevators.forEach(otherTransit => {
+      if (transit.id !== otherTransit.id) {
+        // Connect stairs to stairs and elevators to elevators between floors
         if (
-          (room.type === 'stairs' && otherRoom.type === 'stairs' &&
-           Math.abs(room.floor - otherRoom.floor) === 1) ||
-          (room.type === 'elevator' && otherRoom.type === 'elevator')
+          (transit.type === 'stairs' && otherTransit.type === 'stairs' &&
+          Math.abs(transit.floor - otherTransit.floor) === 1) ||
+          (transit.type === 'elevator' && otherTransit.type === 'elevator')
         ) {
           // Cost for changing floors - higher for stairs than elevator
-          const floorDifference = Math.abs(room.floor - otherRoom.floor);
-          const costMultiplier = room.type === 'stairs' ? 100 : 50;
-          graph[room.id][otherRoom.id] = floorDifference * costMultiplier;
+          const floorDifference = Math.abs(transit.floor - otherTransit.floor);
+          const costMultiplier = transit.type === 'stairs' ? 100 : 50;
+          graph[transit.id][otherTransit.id] = floorDifference * costMultiplier;
         }
       }
     });

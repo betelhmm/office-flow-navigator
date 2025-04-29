@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Room, iconByType } from '../data/buildingData';
 
@@ -22,7 +21,7 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const mapWidth = 550;
-  const mapHeight = 650;
+  const mapHeight = 550; // Adjusted for more square view
 
   // Handle zoom
   const handleZoom = (e: React.WheelEvent) => {
@@ -102,51 +101,150 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
     );
   };
 
-  // Function to render furniture icons based on room type
-  const renderRoomFurniture = (room: Room) => {
+  // Function to render room based on its type
+  const renderRoom = (room: Room) => {
+    // Define colors based on room type
+    let fillColor = "#f7f7f7";
+    let strokeColor = "#999999";
+    
     switch (room.type) {
       case 'office':
-        return (
-          <g transform={`translate(${room.width/2 - 20}, ${room.height/2 - 20})`}>
-            <rect x="5" y="5" width="30" height="20" fill="#ccc" />
-            <circle cx="20" cy="35" r="8" fill="#ddd" />
-          </g>
-        );
+        fillColor = "#F1F0FB";
+        strokeColor = "#7E69AB";
+        break;
       case 'meeting':
-        return (
-          <g transform={`translate(${room.width/2 - 30}, ${room.height/2 - 20})`}>
-            <rect x="5" y="10" width="50" height="30" fill="#ccc" />
-          </g>
-        );
-      case 'kitchen':
-        return (
-          <g transform={`translate(${room.width/2 - 30}, ${room.height/2 - 30})`}>
-            <rect x="5" y="5" width="30" height="15" fill="#eee" />
-            <rect x="40" y="5" width="15" height="15" fill="#eee" />
-            <rect x="5" y="25" width="50" height="10" fill="#ddd" />
-          </g>
-        );
+        fillColor = "#E9E5F8";
+        strokeColor = "#6E59A5";
+        break;
+      case 'stairs':
+        fillColor = "#FEF3C7";
+        strokeColor = "#D97706";
+        break;
+      case 'elevator':
+        fillColor = "#FEF3C7";
+        strokeColor = "#D97706";
+        break;
       case 'restroom':
-        return (
-          <g transform={`translate(${room.width/2 - 15}, ${room.height/2 - 15})`}>
-            <rect x="5" y="5" width="20" height="20" fill="#eee" />
-            <circle cx="25" cy="25" r="8" fill="#ddd" />
-          </g>
-        );
+        fillColor = "#DBEAFE";
+        strokeColor = "#0EA5E9";
+        break;
+      case 'kitchen':
+        fillColor = "#E5FAF5";
+        strokeColor = "#10B981";
+        break;
+      case 'reception':
+        fillColor = "#FAE8FF";
+        strokeColor = "#D946EF";
+        break;
       case 'break':
-        return (
-          <>
-            <g transform={`translate(${room.width/3 - 20}, ${room.height/3 - 10})`}>
-              <rect x="5" y="5" width="40" height="20" fill="#ccc" />
-            </g>
-            <g transform={`translate(${room.width/3*2 - 20}, ${room.height/3*2 - 20})`}>
-              <circle cx="15" cy="15" r="15" fill="#ddd" />
-            </g>
-          </>
-        );
-      default:
-        return null;
+        fillColor = "#F9FAFB";
+        strokeColor = "#4B5563";
+        break;
+      case 'corridor':
+        fillColor = "#F9FAFB";
+        strokeColor = "#e2e8f0";
+        break;
     }
+    
+    // Check if room is selected or in path
+    const isSelected = selectedRoom?.id === room.id;
+    const isInPath = pathRooms?.some(pathRoom => pathRoom.id === room.id);
+    
+    if (isSelected) {
+      strokeColor = "#9b87f5";
+    }
+    
+    if (isInPath) {
+      strokeColor = "#F97316";
+    }
+    
+    // Skip rendering corridors if they're not in the path and not selected
+    if (room.type === 'corridor' && !isSelected && !isInPath) {
+      return (
+        <rect
+          x={room.position.x - room.width / 2}
+          y={room.position.y - room.height / 2}
+          width={room.width}
+          height={room.height}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={1}
+          strokeDasharray="4,4"
+          opacity={0.5}
+          onClick={() => onRoomClick && onRoomClick(room.id)}
+          style={{ cursor: 'pointer' }}
+        />
+      );
+    }
+    
+    // For regular rooms
+    const RoomIcon = iconByType[room.type];
+    
+    return (
+      <g 
+        key={room.id}
+        onClick={() => onRoomClick && onRoomClick(room.id)}
+        style={{ cursor: 'pointer' }}
+        className={isSelected ? 'animate-pulse' : ''}
+      >
+        {/* Room shape */}
+        <rect
+          x={room.position.x - room.width / 2}
+          y={room.position.y - room.height / 2}
+          width={room.width}
+          height={room.height}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={isSelected || isInPath ? 3 : 2}
+          rx="2"
+          ry="2"
+          opacity={isSelected ? 1 : 0.9}
+        />
+        
+        {/* Room Icon */}
+        {room.type !== 'corridor' && RoomIcon && (
+          <foreignObject 
+            x={room.position.x - 12} 
+            y={room.position.y - 38} 
+            width={24} 
+            height={24}
+            style={{ overflow: 'visible' }}
+          >
+            <div className="flex items-center justify-center w-6 h-6 bg-white rounded-full shadow-sm">
+              <RoomIcon size={16} className="text-gray-700" />
+            </div>
+          </foreignObject>
+        )}
+        
+        {/* Room label - only for non-corridors or selected/path corridors */}
+        {(room.type !== 'corridor' || isSelected || isInPath) && (
+          <text
+            x={room.position.x}
+            y={room.position.y + 5}
+            textAnchor="middle"
+            fill="#333"
+            fontSize={room.type === 'corridor' ? "9" : "11"}
+            fontWeight={isSelected ? "bold" : "normal"}
+          >
+            {room.name}
+          </text>
+        )}
+        
+        {/* Door indicators for rooms */}
+        {room.type !== 'stairs' && 
+         room.type !== 'elevator' && 
+         room.type !== 'corridor' && (
+          <path
+            d={`M ${room.position.x - room.width/4} ${room.position.y + room.height/2} 
+                A ${room.width/8} ${room.height/8} 0 0 1 
+                ${room.position.x - room.width/4 + room.width/8} ${room.position.y + room.height/2}`}
+            fill="none"
+            stroke="#999"
+            strokeWidth="1"
+          />
+        )}
+      </g>
+    );
   };
 
   return (
@@ -172,12 +270,12 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
           transition: isDragging ? 'none' : 'transform 0.1s ease-out'
         }}
       >
-        {/* Wall outlines */}
+        {/* Building outline */}
         <rect
           x="10"
-          y="50"
+          y="10"
           width={mapWidth - 20}
-          height={mapHeight - 100}
+          height={mapHeight - 20}
           fill="none"
           stroke="#333"
           strokeWidth="3"
@@ -185,9 +283,9 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
           ry="2"
         />
         
-        {/* Grid */}
-        <g opacity="0.1">
-          {Array.from({ length: 13 }).map((_, i) => (
+        {/* Subtle grid for reference */}
+        <g opacity="0.05">
+          {Array.from({ length: 11 }).map((_, i) => (
             <line
               key={`h-${i}`}
               x1="0"
@@ -211,133 +309,26 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
           ))}
         </g>
         
-        {/* Path */}
+        {/* Draw corridors first (lowest layer) */}
+        {rooms
+          .filter(room => room.type === 'corridor')
+          .map(room => (
+            <React.Fragment key={room.id}>
+              {renderRoom(room)}
+            </React.Fragment>
+          ))}
+        
+        {/* Draw path */}
         {renderPath()}
         
-        {/* Rooms */}
-        {rooms.map(room => {
-          const isSelected = selectedRoom?.id === room.id;
-          const isInPath = pathRooms?.some(pathRoom => pathRoom.id === room.id);
-          
-          let fillColor = "#f7f7f7";
-          let strokeColor = "#999999";
-          
-          switch (room.type) {
-            case 'office':
-              fillColor = "#F1F0FB";
-              strokeColor = "#7E69AB";
-              break;
-            case 'meeting':
-              fillColor = "#E9E5F8";
-              strokeColor = "#6E59A5";
-              break;
-            case 'stairs':
-              fillColor = "#FEF3C7";
-              strokeColor = "#D97706";
-              break;
-            case 'elevator':
-              fillColor = "#FEF3C7";
-              strokeColor = "#D97706";
-              break;
-            case 'restroom':
-              fillColor = "#DBEAFE";
-              strokeColor = "#0EA5E9";
-              break;
-            case 'kitchen':
-              fillColor = "#E5FAF5";
-              strokeColor = "#10B981";
-              break;
-            case 'reception':
-              fillColor = "#FAE8FF";
-              strokeColor = "#D946EF";
-              break;
-            case 'break':
-              fillColor = "#F9FAFB";
-              strokeColor = "#4B5563";
-              break;
-          }
-          
-          if (isSelected) {
-            strokeColor = "#9b87f5";
-            strokeColor = "#9b87f5";
-          }
-          
-          if (isInPath) {
-            strokeColor = "#F97316";
-          }
-          
-          const RoomIcon = iconByType[room.type];
-          
-          return (
-            <g 
-              key={room.id}
-              onClick={() => onRoomClick && onRoomClick(room.id)}
-              style={{ cursor: 'pointer' }}
-              className={isSelected ? 'animate-pulse' : ''}
-            >
-              {/* Room shape */}
-              <rect
-                x={room.position.x - room.width / 2}
-                y={room.position.y - room.height / 2}
-                width={room.width}
-                height={room.height}
-                fill={fillColor}
-                stroke={strokeColor}
-                strokeWidth={isSelected || isInPath ? 3 : 2}
-                rx="2"
-                ry="2"
-                opacity={isSelected ? 1 : 0.9}
-              />
-              
-              {/* Room furniture */}
-              <g 
-                transform={`translate(${room.position.x - room.width / 2}, ${room.position.y - room.height / 2})`}
-              >
-                {renderRoomFurniture(room)}
-              </g>
-              
-              {/* Room label */}
-              <g transform={`translate(${room.position.x}, ${room.position.y})`}>
-                {RoomIcon && (
-                  <foreignObject 
-                    x={-12} 
-                    y={-38} 
-                    width={24} 
-                    height={24}
-                    style={{ overflow: 'visible' }}
-                  >
-                    <div className="flex items-center justify-center w-6 h-6 bg-white rounded-full shadow-sm">
-                      <RoomIcon size={16} className="text-gray-700" />
-                    </div>
-                  </foreignObject>
-                )}
-                
-                <text
-                  x="0"
-                  y={room.height / 2 - 5}
-                  textAnchor="middle"
-                  fill="#333"
-                  fontSize="11"
-                  fontWeight={isSelected ? "bold" : "normal"}
-                >
-                  {room.name}
-                </text>
-              </g>
-              
-              {/* Door indicators for rooms */}
-              {room.type !== 'stairs' && room.type !== 'elevator' && (
-                <path
-                  d={`M ${room.position.x - room.width/2 + room.width/4} ${room.position.y + room.height/2} 
-                      A ${room.width/4} ${room.height/4} 0 0 1 
-                      ${room.position.x - room.width/2 + room.width/4 + room.width/4} ${room.position.y + room.height/2}`}
-                  fill="none"
-                  stroke="#999"
-                  strokeWidth="1"
-                />
-              )}
-            </g>
-          );
-        })}
+        {/* Draw other rooms (higher layer) */}
+        {rooms
+          .filter(room => room.type !== 'corridor')
+          .map(room => (
+            <React.Fragment key={room.id}>
+              {renderRoom(room)}
+            </React.Fragment>
+          ))}
       </svg>
       
       {/* Controls */}

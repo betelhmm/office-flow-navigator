@@ -25,6 +25,7 @@ const roomTypeLabels: Record<RoomType, string> = {
   print: 'Print Stations',
   mail: 'Mail Room',
   finance: 'Finance',
+  break: 'Break Rooms',
   general: 'General Areas'
 };
 

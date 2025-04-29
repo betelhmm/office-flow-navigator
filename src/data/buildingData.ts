@@ -3,7 +3,7 @@ import {
   MapPin, ArrowUp, Navigation, Coffee, 
   Users, Phone, Presentation, Printer, 
   Box, Mail, FileText, Calculator,
-  Bed, Sofa, Kitchen, Square
+  Bed, Sofa, Square, UtensilsCrossed
 } from "lucide-react";
 
 export type RoomType = 
@@ -50,7 +50,7 @@ export const iconByType = {
   stairs: ArrowUp,
   elevator: Navigation,
   restroom: MapPin,
-  kitchen: Kitchen,
+  kitchen: UtensilsCrossed,
   reception: Phone,
   storage: Box,
   print: Printer,

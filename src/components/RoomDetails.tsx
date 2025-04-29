@@ -28,7 +28,12 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-semibold">{room.name}</h2>
-            <p className="text-gray-500">Floor {room.floor}</p>
+            <p className="text-gray-500">
+              {room.floor === 1 ? "Ground Floor" : 
+               room.floor === 2 ? "First Floor" : 
+               room.floor === 3 ? "Second Floor" : 
+               "Third Floor"}
+            </p>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>

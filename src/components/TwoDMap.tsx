@@ -21,9 +21,8 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const mapWidth = 500;
-  const mapHeight = 500;
-  const roomSize = 40;
+  const mapWidth = 550;
+  const mapHeight = 650;
 
   // Handle zoom
   const handleZoom = (e: React.WheelEvent) => {
@@ -97,9 +96,57 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
         strokeWidth="4"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="path-animation animate-flow-path"
+        strokeDasharray="10,5"
+        className="path-animation"
       />
     );
+  };
+
+  // Function to render furniture icons based on room type
+  const renderRoomFurniture = (room: Room) => {
+    switch (room.type) {
+      case 'office':
+        return (
+          <g transform={`translate(${room.width/2 - 20}, ${room.height/2 - 20})`}>
+            <rect x="5" y="5" width="30" height="20" fill="#ccc" />
+            <circle cx="20" cy="35" r="8" fill="#ddd" />
+          </g>
+        );
+      case 'meeting':
+        return (
+          <g transform={`translate(${room.width/2 - 30}, ${room.height/2 - 20})`}>
+            <rect x="5" y="10" width="50" height="30" fill="#ccc" />
+          </g>
+        );
+      case 'kitchen':
+        return (
+          <g transform={`translate(${room.width/2 - 30}, ${room.height/2 - 30})`}>
+            <rect x="5" y="5" width="30" height="15" fill="#eee" />
+            <rect x="40" y="5" width="15" height="15" fill="#eee" />
+            <rect x="5" y="25" width="50" height="10" fill="#ddd" />
+          </g>
+        );
+      case 'restroom':
+        return (
+          <g transform={`translate(${room.width/2 - 15}, ${room.height/2 - 15})`}>
+            <rect x="5" y="5" width="20" height="20" fill="#eee" />
+            <circle cx="25" cy="25" r="8" fill="#ddd" />
+          </g>
+        );
+      case 'break':
+        return (
+          <>
+            <g transform={`translate(${room.width/3 - 20}, ${room.height/3 - 10})`}>
+              <rect x="5" y="5" width="40" height="20" fill="#ccc" />
+            </g>
+            <g transform={`translate(${room.width/3*2 - 20}, ${room.height/3*2 - 20})`}>
+              <circle cx="15" cy="15" r="15" fill="#ddd" />
+            </g>
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -125,27 +172,40 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
           transition: isDragging ? 'none' : 'transform 0.1s ease-out'
         }}
       >
+        {/* Wall outlines */}
+        <rect
+          x="10"
+          y="50"
+          width={mapWidth - 20}
+          height={mapHeight - 100}
+          fill="none"
+          stroke="#333"
+          strokeWidth="3"
+          rx="2"
+          ry="2"
+        />
+        
         {/* Grid */}
-        <g>
-          {Array.from({ length: 10 }).map((_, i) => (
+        <g opacity="0.1">
+          {Array.from({ length: 13 }).map((_, i) => (
             <line
               key={`h-${i}`}
               x1="0"
               y1={i * 50}
               x2={mapWidth}
               y2={i * 50}
-              stroke="#ddd"
+              stroke="#666"
               strokeWidth="1"
             />
           ))}
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 11 }).map((_, i) => (
             <line
               key={`v-${i}`}
               x1={i * 50}
               y1="0"
               x2={i * 50}
               y2={mapHeight}
-              stroke="#ddd"
+              stroke="#666"
               strokeWidth="1"
             />
           ))}
@@ -159,72 +219,122 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
           const isSelected = selectedRoom?.id === room.id;
           const isInPath = pathRooms?.some(pathRoom => pathRoom.id === room.id);
           
-          let fillColor = "#9b87f5";
-          let strokeColor = "#7E69AB";
+          let fillColor = "#f7f7f7";
+          let strokeColor = "#999999";
           
           switch (room.type) {
             case 'office':
-              fillColor = "#7E69AB";
+              fillColor = "#F1F0FB";
+              strokeColor = "#7E69AB";
               break;
             case 'meeting':
-              fillColor = "#6E59A5";
+              fillColor = "#E9E5F8";
+              strokeColor = "#6E59A5";
               break;
             case 'stairs':
-              fillColor = "#F97316";
+              fillColor = "#FEF3C7";
+              strokeColor = "#D97706";
               break;
             case 'elevator':
-              fillColor = "#F97316";
+              fillColor = "#FEF3C7";
+              strokeColor = "#D97706";
               break;
             case 'restroom':
-              fillColor = "#0EA5E9";
+              fillColor = "#DBEAFE";
+              strokeColor = "#0EA5E9";
               break;
             case 'kitchen':
-              fillColor = "#F97316";
+              fillColor = "#E5FAF5";
+              strokeColor = "#10B981";
               break;
             case 'reception':
-              fillColor = "#D946EF";
+              fillColor = "#FAE8FF";
+              strokeColor = "#D946EF";
+              break;
+            case 'break':
+              fillColor = "#F9FAFB";
+              strokeColor = "#4B5563";
               break;
           }
           
           if (isSelected) {
-            fillColor = "#F1F0FB";
+            strokeColor = "#9b87f5";
             strokeColor = "#9b87f5";
           }
           
           if (isInPath) {
             strokeColor = "#F97316";
-            strokeColor = "#F97316";
           }
+          
+          const RoomIcon = iconByType[room.type];
           
           return (
             <g 
               key={room.id}
               onClick={() => onRoomClick && onRoomClick(room.id)}
               style={{ cursor: 'pointer' }}
-              className={isSelected ? 'animate-pulse-location' : ''}
+              className={isSelected ? 'animate-pulse' : ''}
             >
+              {/* Room shape */}
               <rect
-                x={room.position.x - roomSize / 2}
-                y={room.position.y - roomSize / 2}
-                width={roomSize}
-                height={roomSize}
+                x={room.position.x - room.width / 2}
+                y={room.position.y - room.height / 2}
+                width={room.width}
+                height={room.height}
                 fill={fillColor}
                 stroke={strokeColor}
-                strokeWidth="2"
-                rx="4"
-                ry="4"
-                opacity={isSelected || isInPath ? 1 : 0.7}
+                strokeWidth={isSelected || isInPath ? 3 : 2}
+                rx="2"
+                ry="2"
+                opacity={isSelected ? 1 : 0.9}
               />
               
-              <text
-                x={room.position.x}
-                y={room.position.y + roomSize / 2 + 15}
-                textAnchor="middle"
-                fill="#333"
-                fontSize="10"
+              {/* Room furniture */}
+              <g 
+                transform={`translate(${room.position.x - room.width / 2}, ${room.position.y - room.height / 2})`}
               >
-                {room.name}
-              </text>
+                {renderRoomFurniture(room)}
+              </g>
+              
+              {/* Room label */}
+              <g transform={`translate(${room.position.x}, ${room.position.y})`}>
+                {RoomIcon && (
+                  <foreignObject 
+                    x={-12} 
+                    y={-38} 
+                    width={24} 
+                    height={24}
+                    style={{ overflow: 'visible' }}
+                  >
+                    <div className="flex items-center justify-center w-6 h-6 bg-white rounded-full shadow-sm">
+                      <RoomIcon size={16} className="text-gray-700" />
+                    </div>
+                  </foreignObject>
+                )}
+                
+                <text
+                  x="0"
+                  y={room.height / 2 - 5}
+                  textAnchor="middle"
+                  fill="#333"
+                  fontSize="11"
+                  fontWeight={isSelected ? "bold" : "normal"}
+                >
+                  {room.name}
+                </text>
+              </g>
+              
+              {/* Door indicators for rooms */}
+              {room.type !== 'stairs' && room.type !== 'elevator' && (
+                <path
+                  d={`M ${room.position.x - room.width/2 + room.width/4} ${room.position.y + room.height/2} 
+                      A ${room.width/4} ${room.height/4} 0 0 1 
+                      ${room.position.x - room.width/2 + room.width/4 + room.width/4} ${room.position.y + room.height/2}`}
+                  fill="none"
+                  stroke="#999"
+                  strokeWidth="1"
+                />
+              )}
             </g>
           );
         })}
@@ -235,12 +345,14 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
         <button
           onClick={() => setScale(prev => Math.min(prev + 0.2, 3))}
           className="bg-white w-10 h-10 rounded-full shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-100"
+          aria-label="Zoom in"
         >
           +
         </button>
         <button
           onClick={() => setScale(prev => Math.max(prev - 0.2, 0.5))}
           className="bg-white w-10 h-10 rounded-full shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-100"
+          aria-label="Zoom out"
         >
           -
         </button>
@@ -250,6 +362,7 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
             setTranslate({ x: 0, y: 0 });
           }}
           className="bg-white w-10 h-10 rounded-full shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-100"
+          aria-label="Reset view"
         >
           ↺
         </button>

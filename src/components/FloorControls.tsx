@@ -16,7 +16,7 @@ const FloorControls: React.FC<FloorControlsProps> = ({
   onFloorChange
 }) => {
   return (
-    <div className="flex flex-col items-center space-y-2 p-2 bg-white rounded-lg shadow-lg">
+    <div className="flex flex-col items-center space-y-2 p-3 bg-white rounded-lg shadow-lg">
       <div className="w-full p-2 text-center border-b">
         <h3 className="font-medium">Floors</h3>
       </div>
@@ -33,7 +33,12 @@ const FloorControls: React.FC<FloorControlsProps> = ({
             }`}
             onClick={() => onFloorChange(floor.level)}
           >
-            {floor.level}
+            <span>{floor.level}</span>
+            <span className="text-xs ml-1">{
+              floor.level === 1 ? "(G)" : 
+              floor.level === 2 ? "(1st)" :
+              floor.level === 3 ? "(2nd)" : "(3rd)"
+            }</span>
           </Button>
         ))}
       </div>

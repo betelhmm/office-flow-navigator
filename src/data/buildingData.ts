@@ -2,7 +2,8 @@
 import { 
   MapPin, ArrowUp, Navigation, Coffee, 
   Users, Phone, Presentation, Printer, 
-  Box, Mail, FileText, Calculator 
+  Box, Mail, FileText, Calculator,
+  Bed, Sofa, Kitchen, Square
 } from "lucide-react";
 
 export type RoomType = 
@@ -17,6 +18,7 @@ export type RoomType =
   | 'print'
   | 'mail'
   | 'finance'
+  | 'break'
   | 'general';
 
 export interface Room {
@@ -28,9 +30,12 @@ export interface Room {
     x: number;
     y: number;
   };
+  width: number;
+  height: number;
   description?: string;
   icon?: any;
   isAccessible?: boolean;
+  rotation?: number;
 }
 
 export interface Floor {
@@ -45,77 +50,101 @@ export const iconByType = {
   stairs: ArrowUp,
   elevator: Navigation,
   restroom: MapPin,
-  kitchen: Coffee,
+  kitchen: Kitchen,
   reception: Phone,
   storage: Box,
   print: Printer,
   mail: Mail,
   finance: Calculator,
+  break: Sofa,
   general: FileText
 };
 
+// New floor data based on the provided layout
 export const floors: Floor[] = [
   {
     level: 1,
     name: "Ground Floor",
     rooms: [
-      { id: "reception", name: "Reception", floor: 1, type: "reception", position: { x: 50, y: 50 } },
-      { id: "meeting-101", name: "Meeting Room 101", floor: 1, type: "meeting", position: { x: 150, y: 50 } },
-      { id: "meeting-102", name: "Meeting Room 102", floor: 1, type: "meeting", position: { x: 250, y: 50 } },
-      { id: "stairs-1", name: "Stairs", floor: 1, type: "stairs", position: { x: 350, y: 50 } },
-      { id: "elevator-1", name: "Elevator", floor: 1, type: "elevator", position: { x: 450, y: 50 } },
-      { id: "kitchen-1", name: "Kitchen", floor: 1, type: "kitchen", position: { x: 50, y: 150 } },
-      { id: "restroom-1m", name: "Men's Restroom", floor: 1, type: "restroom", position: { x: 150, y: 150 } },
-      { id: "restroom-1w", name: "Women's Restroom", floor: 1, type: "restroom", position: { x: 250, y: 150 }, isAccessible: true },
-      { id: "office-101", name: "Office 101", floor: 1, type: "office", position: { x: 350, y: 150 } },
-      { id: "office-102", name: "Office 102", floor: 1, type: "office", position: { x: 450, y: 150 } },
-      { id: "mail-1", name: "Mail Room", floor: 1, type: "mail", position: { x: 50, y: 250 } },
-      { id: "storage-1", name: "Storage Room", floor: 1, type: "storage", position: { x: 150, y: 250 } },
-      { id: "print-1", name: "Print Station", floor: 1, type: "print", position: { x: 250, y: 250 } },
-      { id: "office-103", name: "Office 103", floor: 1, type: "office", position: { x: 350, y: 250 } },
-      { id: "office-104", name: "Office 104", floor: 1, type: "office", position: { x: 450, y: 250 } },
+      // Common areas
+      { id: "reception-1", name: "Reception", floor: 1, type: "reception", position: { x: 250, y: 400 }, width: 120, height: 60 },
+      { id: "stairs-1", name: "Stairs", floor: 1, type: "stairs", position: { x: 70, y: 400 }, width: 60, height: 60 },
+      { id: "elevator-1", name: "Elevator", floor: 1, type: "elevator", position: { x: 430, y: 400 }, width: 60, height: 60 },
+      { id: "kitchen-1", name: "Kitchen", floor: 1, type: "kitchen", position: { x: 430, y: 200 }, width: 100, height: 100 },
+      { id: "restroom-1", name: "Restroom", floor: 1, type: "restroom", position: { x: 430, y: 300 }, width: 100, height: 60 },
+      
+      // Large open office
+      { id: "break-room-1", name: "Break Room", floor: 1, type: "break", position: { x: 260, y: 180 }, width: 140, height: 200 },
+      { id: "office-large-1", name: "Open Office", floor: 1, type: "office", position: { x: 100, y: 150 }, width: 160, height: 200 },
+      
+      // Individual offices
+      { id: "office-101", name: "Office 101", floor: 1, type: "office", position: { x: 80, y: 500 }, width: 120, height: 120 },
+      { id: "office-102", name: "Office 102", floor: 1, type: "office", position: { x: 200, y: 500 }, width: 120, height: 120 },
+      { id: "office-103", name: "Office 103", floor: 1, type: "office", position: { x: 320, y: 500 }, width: 120, height: 120 },
+      { id: "office-104", name: "Office 104", floor: 1, type: "office", position: { x: 440, y: 500 }, width: 120, height: 120 },
     ]
   },
   {
     level: 2,
     name: "First Floor",
     rooms: [
-      { id: "office-201", name: "Office 201", floor: 2, type: "office", position: { x: 50, y: 50 } },
-      { id: "office-202", name: "Office 202", floor: 2, type: "office", position: { x: 150, y: 50 } },
-      { id: "office-203", name: "Office 203", floor: 2, type: "office", position: { x: 250, y: 50 } },
-      { id: "stairs-2", name: "Stairs", floor: 2, type: "stairs", position: { x: 350, y: 50 } },
-      { id: "elevator-2", name: "Elevator", floor: 2, type: "elevator", position: { x: 450, y: 50 } },
-      { id: "meeting-201", name: "Meeting Room 201", floor: 2, type: "meeting", position: { x: 50, y: 150 } },
-      { id: "meeting-202", name: "Meeting Room 202", floor: 2, type: "meeting", position: { x: 150, y: 150 } },
-      { id: "restroom-2m", name: "Men's Restroom", floor: 2, type: "restroom", position: { x: 250, y: 150 } },
-      { id: "restroom-2w", name: "Women's Restroom", floor: 2, type: "restroom", position: { x: 350, y: 150 }, isAccessible: true },
-      { id: "kitchen-2", name: "Kitchen", floor: 2, type: "kitchen", position: { x: 450, y: 150 } },
-      { id: "finance-1", name: "Finance Dept", floor: 2, type: "finance", position: { x: 50, y: 250 } },
-      { id: "office-204", name: "Office 204", floor: 2, type: "office", position: { x: 150, y: 250 } },
-      { id: "office-205", name: "Office 205", floor: 2, type: "office", position: { x: 250, y: 250 } },
-      { id: "office-206", name: "Office 206", floor: 2, type: "office", position: { x: 350, y: 250 } },
-      { id: "print-2", name: "Print Station", floor: 2, type: "print", position: { x: 450, y: 250 } },
+      // Common areas
+      { id: "stairs-2", name: "Stairs", floor: 2, type: "stairs", position: { x: 70, y: 400 }, width: 60, height: 60 },
+      { id: "elevator-2", name: "Elevator", floor: 2, type: "elevator", position: { x: 430, y: 400 }, width: 60, height: 60 },
+      { id: "kitchen-2", name: "Kitchen", floor: 2, type: "kitchen", position: { x: 430, y: 200 }, width: 100, height: 100 },
+      { id: "restroom-2", name: "Restroom", floor: 2, type: "restroom", position: { x: 430, y: 300 }, width: 100, height: 60 },
+      
+      // Meeting rooms
+      { id: "meeting-201", name: "Meeting Room 201", floor: 2, type: "meeting", position: { x: 260, y: 180 }, width: 140, height: 140 },
+      { id: "meeting-202", name: "Meeting Room 202", floor: 2, type: "meeting", position: { x: 100, y: 150 }, width: 160, height: 180 },
+      
+      // Individual offices
+      { id: "office-201", name: "Office 201", floor: 2, type: "office", position: { x: 80, y: 500 }, width: 120, height: 120 },
+      { id: "office-202", name: "Office 202", floor: 2, type: "office", position: { x: 200, y: 500 }, width: 120, height: 120 },
+      { id: "office-203", name: "Office 203", floor: 2, type: "office", position: { x: 320, y: 500 }, width: 120, height: 120 },
+      { id: "office-204", name: "Office 204", floor: 2, type: "office", position: { x: 440, y: 500 }, width: 120, height: 120 },
     ]
   },
   {
     level: 3,
     name: "Second Floor",
     rooms: [
-      { id: "office-301", name: "Office 301", floor: 3, type: "office", position: { x: 50, y: 50 } },
-      { id: "office-302", name: "Office 302", floor: 3, type: "office", position: { x: 150, y: 50 } },
-      { id: "meeting-301", name: "Meeting Room 301", floor: 3, type: "meeting", position: { x: 250, y: 50 } },
-      { id: "stairs-3", name: "Stairs", floor: 3, type: "stairs", position: { x: 350, y: 50 } },
-      { id: "elevator-3", name: "Elevator", floor: 3, type: "elevator", position: { x: 450, y: 50 } },
-      { id: "office-303", name: "Office 303", floor: 3, type: "office", position: { x: 50, y: 150 } },
-      { id: "office-304", name: "Office 304", floor: 3, type: "office", position: { x: 150, y: 150 } },
-      { id: "meeting-302", name: "Meeting Room 302", floor: 3, type: "meeting", position: { x: 250, y: 150 } },
-      { id: "restroom-3m", name: "Men's Restroom", floor: 3, type: "restroom", position: { x: 350, y: 150 }, isAccessible: true },
-      { id: "restroom-3w", name: "Women's Restroom", floor: 3, type: "restroom", position: { x: 450, y: 150 } },
-      { id: "storage-3", name: "Storage Room", floor: 3, type: "storage", position: { x: 50, y: 250 } },
-      { id: "print-3", name: "Print Station", floor: 3, type: "print", position: { x: 150, y: 250 } },
-      { id: "office-305", name: "Office 305", floor: 3, type: "office", position: { x: 250, y: 250 } },
-      { id: "office-306", name: "Office 306", floor: 3, type: "office", position: { x: 350, y: 250 } },
-      { id: "office-307", name: "Office 307", floor: 3, type: "office", position: { x: 450, y: 250 } },
+      // Common areas
+      { id: "stairs-3", name: "Stairs", floor: 3, type: "stairs", position: { x: 70, y: 400 }, width: 60, height: 60 },
+      { id: "elevator-3", name: "Elevator", floor: 3, type: "elevator", position: { x: 430, y: 400 }, width: 60, height: 60 },
+      { id: "kitchen-3", name: "Kitchen", floor: 3, type: "kitchen", position: { x: 430, y: 200 }, width: 100, height: 100 },
+      { id: "restroom-3", name: "Restroom", floor: 3, type: "restroom", position: { x: 430, y: 300 }, width: 100, height: 60 },
+      
+      // Finance department
+      { id: "finance-office", name: "Finance Department", floor: 3, type: "finance", position: { x: 260, y: 180 }, width: 140, height: 200 },
+      { id: "storage-3", name: "Storage Room", floor: 3, type: "storage", position: { x: 100, y: 150 }, width: 160, height: 200 },
+      
+      // Individual offices
+      { id: "office-301", name: "Office 301", floor: 3, type: "office", position: { x: 80, y: 500 }, width: 120, height: 120 },
+      { id: "office-302", name: "Office 302", floor: 3, type: "office", position: { x: 200, y: 500 }, width: 120, height: 120 },
+      { id: "office-303", name: "Office 303", floor: 3, type: "office", position: { x: 320, y: 500 }, width: 120, height: 120 },
+      { id: "office-304", name: "Office 304", floor: 3, type: "office", position: { x: 440, y: 500 }, width: 120, height: 120 },
+    ]
+  },
+  {
+    level: 4,
+    name: "Third Floor",
+    rooms: [
+      // Common areas
+      { id: "stairs-4", name: "Stairs", floor: 4, type: "stairs", position: { x: 70, y: 400 }, width: 60, height: 60 },
+      { id: "elevator-4", name: "Elevator", floor: 4, type: "elevator", position: { x: 430, y: 400 }, width: 60, height: 60 },
+      { id: "kitchen-4", name: "Kitchen", floor: 4, type: "kitchen", position: { x: 430, y: 200 }, width: 100, height: 100 },
+      { id: "restroom-4", name: "Restroom", floor: 4, type: "restroom", position: { x: 430, y: 300 }, width: 100, height: 60 },
+      
+      // Executive offices
+      { id: "exec-office", name: "Executive Office", floor: 4, type: "office", position: { x: 260, y: 180 }, width: 140, height: 200 },
+      { id: "meeting-401", name: "Board Room", floor: 4, type: "meeting", position: { x: 100, y: 150 }, width: 160, height: 180 },
+      
+      // Individual offices
+      { id: "office-401", name: "Office 401", floor: 4, type: "office", position: { x: 80, y: 500 }, width: 120, height: 120 },
+      { id: "office-402", name: "Office 402", floor: 4, type: "office", position: { x: 200, y: 500 }, width: 120, height: 120 },
+      { id: "office-403", name: "Office 403", floor: 4, type: "office", position: { x: 320, y: 500 }, width: 120, height: 120 },
+      { id: "office-404", name: "Office 404", floor: 4, type: "office", position: { x: 440, y: 500 }, width: 120, height: 120 },
     ]
   }
 ];

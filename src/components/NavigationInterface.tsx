@@ -1,20 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import ThreeDMap from './ThreeDMap';
 import TwoDMap from './TwoDMap';
 import DirectoryPanel from './DirectoryPanel';
 import FloorControls from './FloorControls';
 import RoomDetails from './RoomDetails';
 import { Room, floors, getRoom, getRoomsByFloor } from '../data/buildingData';
 import { buildGraph, findShortestPath } from '../utils/pathfinding';
-import { Compass, Map, X } from 'lucide-react';
+import { Compass, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const NavigationInterface: React.FC = () => {
   const [selectedFloor, setSelectedFloor] = useState(1);
-  const [viewMode, setViewMode] = useState<'2d' | '3d'>('3d');
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Room>(floors[0].rooms[0]); // Default to reception
   const [pathRooms, setPathRooms] = useState<Room[]>([]);
@@ -111,13 +108,6 @@ const NavigationInterface: React.FC = () => {
             <h1 className="text-xl font-bold text-nav-700">Office Navigator</h1>
           </div>
           
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as '2d' | '3d')}>
-            <TabsList className="border">
-              <TabsTrigger value="2d">2D View</TabsTrigger>
-              <TabsTrigger value="3d">3D View</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
           <div className="flex items-center space-x-2">
             {pathRooms.length > 0 && (
               <Button variant="outline" onClick={clearRoute}>
@@ -132,20 +122,12 @@ const NavigationInterface: React.FC = () => {
         
         {/* Map Container */}
         <div className="flex-1 relative map-container">
-          {viewMode === '3d' ? (
-            <ThreeDMap 
-              selectedFloor={selectedFloor} 
-              selectedRoom={selectedRoom}
-              pathRooms={pathRooms}
-            />
-          ) : (
-            <TwoDMap 
-              rooms={getRoomsByFloor(selectedFloor)}
-              selectedRoom={selectedRoom}
-              pathRooms={pathRooms?.filter(room => room.floor === selectedFloor)}
-              onRoomClick={handleRoomClick}
-            />
-          )}
+          <TwoDMap 
+            rooms={getRoomsByFloor(selectedFloor)}
+            selectedRoom={selectedRoom}
+            pathRooms={pathRooms?.filter(room => room.floor === selectedFloor)}
+            onRoomClick={handleRoomClick}
+          />
           
           {/* Floor Controls */}
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2">

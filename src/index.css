@@ -96,13 +96,37 @@
   }
 }
 
-.three-canvas {
-  touch-action: none;
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes flow-path {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .path-animation {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
+  stroke-dasharray: 10, 5;
+  animation: flow-path 2s linear forwards;
+}
+
+.animate-fade-in {
+  animation: fadein 0.3s ease-out forwards;
 }
 
 .glassmorphism {

@@ -6,7 +6,7 @@ interface Graph {
   [key: string]: { [key: string]: number };
 }
 
-// A simple representation of our building's connectivity
+// Updated buildGraph function to handle the new floor plan design
 export const buildGraph = (rooms: Room[]): Graph => {
   const graph: Graph = {};
   
@@ -15,33 +15,34 @@ export const buildGraph = (rooms: Room[]): Graph => {
     graph[room.id] = {};
   });
   
-  // For simplicity, we're creating connections based on proximity
-  // In a real app, you would have a more accurate representation
+  // For each room, connect to nearby rooms on the same floor
   rooms.forEach(room => {
     rooms.forEach(otherRoom => {
       if (room.id !== otherRoom.id) {
-        // Connect rooms on same floor
+        // Connect rooms on same floor based on proximity
         if (room.floor === otherRoom.floor) {
-          // Simple distance calculation
+          // Calculate distance between room centers
           const distance = Math.sqrt(
             Math.pow(room.position.x - otherRoom.position.x, 2) +
             Math.pow(room.position.y - otherRoom.position.y, 2)
           );
           
-          // Only connect if they're reasonably close (arbitrary threshold)
-          if (distance < 150) {
+          // Connect if they're reasonably close
+          if (distance < 200) {
             graph[room.id][otherRoom.id] = distance;
           }
         }
         
-        // Connect via stairs and elevators
+        // Connect stairs and elevators between floors
         if (
           (room.type === 'stairs' && otherRoom.type === 'stairs' &&
            Math.abs(room.floor - otherRoom.floor) === 1) ||
           (room.type === 'elevator' && otherRoom.type === 'elevator')
         ) {
-          // Cost for changing floors
-          graph[room.id][otherRoom.id] = 50;
+          // Cost for changing floors - higher for stairs than elevator
+          const floorDifference = Math.abs(room.floor - otherRoom.floor);
+          const costMultiplier = room.type === 'stairs' ? 100 : 50;
+          graph[room.id][otherRoom.id] = floorDifference * costMultiplier;
         }
       }
     });

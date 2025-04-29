@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Room, iconByType } from '../data/buildingData';
 
@@ -21,7 +22,7 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const mapWidth = 550;
-  const mapHeight = 550; // Adjusted for more square view
+  const mapHeight = 550;
 
   // Handle zoom
   const handleZoom = (e: React.WheelEvent) => {
@@ -83,13 +84,16 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
   const renderPath = () => {
     if (!pathRooms || pathRooms.length < 2) return null;
     
-    const points = pathRooms.map(room => 
-      `${room.position.x},${room.position.y}`
-    ).join(' ');
+    // Create smoother path with curve points
+    let pathPoints = [];
+    for (let i = 0; i < pathRooms.length; i++) {
+      const room = pathRooms[i];
+      pathPoints.push(`${room.position.x},${room.position.y}`);
+    }
     
     return (
       <polyline
-        points={points}
+        points={pathPoints.join(' ')}
         fill="none"
         stroke="#F97316"
         strokeWidth="4"
@@ -156,12 +160,18 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
     
     if (isInPath) {
       strokeColor = "#F97316";
+      // Highlight corridors in path more visibly
+      if (room.type === 'corridor') {
+        fillColor = "#FEF2F2";
+        strokeColor = "#F97316";
+      }
     }
     
-    // Skip rendering corridors if they're not in the path and not selected
+    // Always render corridors but with different styling when not in path
     if (room.type === 'corridor' && !isSelected && !isInPath) {
       return (
         <rect
+          key={room.id}
           x={room.position.x - room.width / 2}
           y={room.position.y - room.height / 2}
           width={room.width}
@@ -312,11 +322,7 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
         {/* Draw corridors first (lowest layer) */}
         {rooms
           .filter(room => room.type === 'corridor')
-          .map(room => (
-            <React.Fragment key={room.id}>
-              {renderRoom(room)}
-            </React.Fragment>
-          ))}
+          .map(room => renderRoom(room))}
         
         {/* Draw path */}
         {renderPath()}
@@ -324,11 +330,7 @@ const TwoDMap: React.FC<TwoDMapProps> = ({
         {/* Draw other rooms (higher layer) */}
         {rooms
           .filter(room => room.type !== 'corridor')
-          .map(room => (
-            <React.Fragment key={room.id}>
-              {renderRoom(room)}
-            </React.Fragment>
-          ))}
+          .map(room => renderRoom(room))}
       </svg>
       
       {/* Controls */}

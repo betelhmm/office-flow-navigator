@@ -69,11 +69,11 @@ export const buildGraph = (rooms: Room[]): Graph => {
           Math.pow(corridor.position.y - otherCorridor.position.y, 2)
         );
         
-        // Connect if distance is reasonable
-        if (distance < 150) {
-          // Corridors should have lower transit cost
-          graph[corridor.id][otherCorridor.id] = distance * 0.5;
-          graph[otherCorridor.id][corridor.id] = distance * 0.5;
+        // Connect if distance is reasonable - this is critical for corridor-to-corridor paths
+        if (distance < 180) {  // Increased distance threshold for better corridor connections
+          // Corridors should have MUCH lower transit cost to ensure paths prefer corridors
+          graph[corridor.id][otherCorridor.id] = distance * 0.3;  // Reduced cost factor to prioritize corridors
+          graph[otherCorridor.id][corridor.id] = distance * 0.3;
         }
       }
     });
@@ -101,7 +101,7 @@ export const buildGraph = (rooms: Room[]): Graph => {
   return graph;
 };
 
-// Simple Dijkstra's algorithm for finding shortest path
+// Enhanced Dijkstra's algorithm with corridor preference
 export const findShortestPath = (
   graph: Graph, 
   startRoom: string, 
